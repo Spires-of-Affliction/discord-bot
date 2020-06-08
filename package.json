@@ -1,0 +1,27 @@
+{
+  "name": "soa-discord-bot",
+  "version": "1.0.0",
+  "description": "Team Discord Bot",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node .",
+    "dev": "nodemon ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Spires-of-Affliction/discord-bot.git"
+  },
+  "author": "Denis Onder (denis_onder@protonmail.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Spires-of-Affliction/discord-bot/issues"
+  },
+  "homepage": "https://github.com/Spires-of-Affliction/discord-bot#readme",
+  "dependencies": {
+    "discord.js": "^12.2.0",
+    "dotenv": "^8.2.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.2.0"
+  }
+}
