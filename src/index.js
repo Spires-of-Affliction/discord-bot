@@ -3,22 +3,33 @@ const client = new Client();
 
 require('dotenv').config();
 
+const {
+  DEVELOPER_ROLE_ID,
+  GITHUB_WEBHOOK_NAME,
+  GITHUB_WEBHOOK_CHANNEL,
+  TOKEN,
+} = process.env;
+
 const alertDevelopers = ({ embeds, channel }) => {
-  const send = (msg) => channel.send(`<@&${process.env.ROLE_ID}>\n${msg}`);
+  const [embed] = embeds;
+  const send = (msg) => channel.send(`<@&${DEVELOPER_ROLE_ID}>\n${msg}`);
 
-  if (embeds[0].description.includes('Merge')) return send('Merge Alert!');
+  if (embed.description.includes('Merge')) return send('Merge Alert!');
 
-  if (embeds.title.includes('master'))
+  if (embed.title.includes('master'))
     return send('Changes commited to master branch!');
 };
 
-function handleMessage(msg) {
-  if (msg.channel.name === 'github' && msg.author.username === 'GitHub')
+const handleMessage = (msg) => {
+  if (
+    msg.channel.name === GITHUB_WEBHOOK_CHANNEL &&
+    msg.author.username === GITHUB_WEBHOOK_NAME
+  )
     alertDevelopers(msg);
-}
+};
 
 client.on('message', handleMessage);
 
 client.on('ready', () => console.log(client.user.tag));
 
-client.login(process.env.TOKEN);
+client.login(TOKEN);
