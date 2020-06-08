@@ -1,5 +1,5 @@
+const WebSocket = require('ws');
 const { Client } = require('discord.js');
-const client = new Client();
 
 require('dotenv').config();
 
@@ -8,7 +8,15 @@ const {
   GITHUB_WEBHOOK_NAME,
   GITHUB_WEBHOOK_CHANNEL,
   TOKEN,
+  PORT: port,
 } = process.env;
+
+const server = new WebSocket.Server({ port });
+const client = new Client();
+
+server.on('connection', (ws) => {
+  ws.on('message', (msg) => console.log(msg));
+});
 
 const alertDevelopers = ({ embeds, channel }) => {
   const [embed] = embeds;
