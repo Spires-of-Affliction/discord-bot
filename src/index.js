@@ -18,6 +18,10 @@ const client = new Client();
 
 console.log(`WebSocket server running!\nws://localhost:${port}`);
 
+const broadcast = (msg) => server.clients.forEach((client) => client.send(msg));
+
+let pool = [];
+
 const findChannel = () => {
   const guild = client.guilds.cache.find(({ id }) => id === guildID);
   if (!guild) throw Error('findChannel: Guild not found.');
@@ -29,11 +33,9 @@ const findChannel = () => {
 };
 
 const handleSocketEvent = (msg) => {
-  switch (msg) {
-    case 'cloud::modified':
-      alertEveryone('Cloud storage has been updated!');
-      break;
-  }
+  const [event, file] = msg.split('::');
+  pool.push(`${event === 'unlink' ? '-' : '+'} ${file}`);
+  console.log(`Added to pool: ${file}`);
 };
 
 server.on('connection', (ws) => {
@@ -43,7 +45,7 @@ server.on('connection', (ws) => {
 const alertEveryone = (msg) => {
   const channel = findChannel();
 
-  channel.send(`@everyone\n${msg}`);
+  channel.send(`@everyone\nCloud storage has been updated:\n${msg}`);
 };
 
 const alertDevelopers = ({ embeds, channel }) => {
@@ -69,3 +71,13 @@ client.on('message', handleMessage);
 client.on('ready', () => console.log(client.user.tag));
 
 client.login(token);
+
+setInterval(() => {
+  if (pool.length > 0) {
+    alertEveryone('```md\n' + pool.join('\n') + '```');
+    pool = [];
+    broadcast('backup');
+
+    console.log('Pool has been cleared.\n');
+  }
+}, 30000);
