@@ -27,9 +27,6 @@ const setActivity = () =>
     }
   );
 
-server.on('connection', setActivity);
-server.on('close', setActivity);
-
 const broadcast = (msg) => server.clients.forEach((client) => client.send(msg));
 
 let pool = [];
@@ -51,6 +48,8 @@ const handleSocketEvent = (msg) => {
 };
 
 server.on('connection', (ws) => {
+  setActivity();
+  ws.on('close', setActivity);
   ws.on('message', (msg) => handleSocketEvent(msg));
 });
 
