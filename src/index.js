@@ -12,7 +12,13 @@ const {
   PORT: port,
   GUILD_ID: guildID,
   CHANNEL_ID: channelID,
+  LOCALIZED,
+  LOCALIZED_CLOUD_STORAGE_ALERT: localizedCloudStorageAlert,
+  LOCALIZED_MERGE_ALERT: localizedMergeAlert,
+  LOCALIZED_MASTER_COMMIT_ALERT: localizedMasterCommitAlert,
 } = process.env;
+
+const localized = LOCALIZED == 'true';
 
 const server = new WebSocket.Server({ port });
 const client = new Client();
@@ -59,17 +65,34 @@ server.on('connection', (ws, req) => {
 
 const alertTeam = (msg) => {
   const channel = findChannel();
+  let onlineMembers;
 
-  channel.send(`<@&${teamRoleID}>\nPromjene u MEGA Cloud folderu\n${msg}`);
+  for (const { presence } of channel.members.values()) {
+    if (presence.status === 'online') onlineMembers++;
+  }
+
+  channel.send(
+    `${onlineMembers > channel.members.size / 2 ? `<@&${teamRoleID}>` : ''}\n${
+      localized
+        ? localizedCloudStorageAlert
+        : 'Changes detected in your cloud storage folder:'
+    }\n${msg}`
+  );
 };
 
 const alertDevelopers = ({ embeds, channel }) => {
   const [embed] = embeds;
   const send = (msg) => channel.send(`<@&${developerRoleID}>\n${msg}`);
 
-  if (embed.description.includes('Merge')) return send('Izvrsen merge!');
+  if (embed.description.includes('Merge'))
+    return send(localized ? localizedMergeAlert : 'Merge Alert!');
 
-  if (embed.title.includes('master')) return send('Promjene u master branchu!');
+  if (embed.title.includes('master'))
+    return send(
+      localized
+        ? localizedMasterCommitAlert
+        : 'Commits pushed to `master` branch!'
+    );
 };
 
 const handleMessage = (msg) => {
