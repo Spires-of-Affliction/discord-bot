@@ -44,7 +44,6 @@ const findChannel = () => {
 };
 
 const handleSocketEvent = (msg) => {
-  console.log(msg);
   if (!msg.includes(messageDelimiter)) return;
   const [event, file] = msg.split(messageDelimiter);
   pool.push(`${event === 'unlink' ? '-' : '+'} ${file}`);
