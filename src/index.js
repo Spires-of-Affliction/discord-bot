@@ -5,6 +5,7 @@ require('dotenv').config();
 
 const {
   DEVELOPER_ROLE_ID: developerRoleID,
+  TEAM_ROLE_ID: teamRoleID,
   GITHUB_WEBHOOK_NAME: githubWebhookName,
   GITHUB_WEBHOOK_CHANNEL: githubWebhookChannel,
   TOKEN: token,
@@ -42,10 +43,10 @@ server.on('connection', (ws) => {
   ws.on('message', (msg) => handleSocketEvent(msg));
 });
 
-const alertEveryone = (msg) => {
+const alertTeam = (msg) => {
   const channel = findChannel();
 
-  channel.send(`@everyone\nCloud storage has been updated:\n${msg}`);
+  channel.send(`<@&${teamRoleID}>\nCloud storage has been updated:\n${msg}`);
 };
 
 const alertDevelopers = ({ embeds, channel }) => {
@@ -74,7 +75,7 @@ client.login(token);
 
 setInterval(() => {
   if (pool.length > 0) {
-    alertEveryone('```md\n' + pool.join('\n') + '```');
+    alertTeam('```md\n' + pool.join('\n') + '```');
     pool = [];
     broadcast('backup');
 
