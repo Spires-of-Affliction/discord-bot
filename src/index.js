@@ -29,7 +29,11 @@ console.log(`WebSocket server running!\nws://localhost:${port}`);
 
 const setActivity = () =>
   client.user.setActivity(
-    `for changes ${server.clients.size > 0 ? `| ${server.clients.size}` : ''}`,
+    `for changes ${
+      server.clients.size > 0
+        ? `| ${server.clients.size > 1 ? 'clients' : 'client'}`
+        : ''
+    }`,
     {
       type: 'WATCHING',
     }
