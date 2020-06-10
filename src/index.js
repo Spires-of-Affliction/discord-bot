@@ -17,6 +17,8 @@ const {
 const server = new WebSocket.Server({ port });
 const client = new Client();
 
+const messageDelimiter = '::';
+
 console.log(`WebSocket server running!\nws://localhost:${port}`);
 
 const setActivity = () =>
@@ -42,15 +44,17 @@ const findChannel = () => {
 };
 
 const handleSocketEvent = (msg) => {
-  const [event, file] = msg.split('::');
+  if (!msg.includes(messageDelimiter)) return;
+  const [event, file] = msg.split(messageDelimiter);
   pool.push(`${event === 'unlink' ? '-' : '+'} ${file}`);
   console.log(`Added to pool: ${file}`);
 };
 
-server.on('connection', (ws) => {
+server.on('connection', (ws, req) => {
   setActivity();
+  console.log(`New connection: ${req.socket.remoteAddress}`);
   ws.on('close', setActivity);
-  ws.on('message', (msg) => handleSocketEvent(msg));
+  ws.on('message', handleSocketEvent);
 });
 
 const alertTeam = (msg) => {
