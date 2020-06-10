@@ -20,11 +20,15 @@ const client = new Client();
 console.log(`WebSocket server running!\nws://localhost:${port}`);
 
 const setActivity = () =>
-  client.user.setActivity(`for changes | ${server.clients.size}`, {
-    type: 'WATCHING',
-  });
+  client.user.setActivity(
+    `for changes ${server.clients.size > 0 ? `| ${server.clients.size}` : ''}`,
+    {
+      type: 'WATCHING',
+    }
+  );
 
 server.on('connection', setActivity);
+server.on('close', setActivity);
 
 const broadcast = (msg) => server.clients.forEach((client) => client.send(msg));
 
