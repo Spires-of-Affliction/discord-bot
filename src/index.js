@@ -56,17 +56,16 @@ server.on('connection', (ws) => {
 const alertTeam = (msg) => {
   const channel = findChannel();
 
-  channel.send(`<@&${teamRoleID}>\nCloud storage has been updated:\n${msg}`);
+  channel.send(`<@&${teamRoleID}>\nPromjene u MEGA Cloud folderu\n${msg}`);
 };
 
 const alertDevelopers = ({ embeds, channel }) => {
   const [embed] = embeds;
   const send = (msg) => channel.send(`<@&${developerRoleID}>\n${msg}`);
 
-  if (embed.description.includes('Merge')) return send('Merge Alert!');
+  if (embed.description.includes('Merge')) return send('Izvrsen merge!');
 
-  if (embed.title.includes('master'))
-    return send('Changes commited to master branch!');
+  if (embed.title.includes('master')) return send('Promjene u master branchu!');
 };
 
 const handleMessage = (msg) => {
