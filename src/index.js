@@ -39,7 +39,7 @@ const setActivity = () =>
 
 const broadcast = (msg) => server.clients.forEach((client) => client.send(msg));
 
-let pool = [];
+let pool = []; // `pool` holds the latest messages temporarily
 
 const findChannel = () => {
   const guild = client.guilds.cache.find(({ id }) => id === guildID);
@@ -51,11 +51,56 @@ const findChannel = () => {
   return channel;
 };
 
+const eventSymbol = (event) => {
+  switch (event) {
+    case 'unlink': // Removed
+    case 'unlinkDir':
+      return '-';
+    case 'add': // Created
+    case 'addDir':
+      return '+';
+    default:
+      return '@';
+  }
+};
+
+function checkIfFilesArePooled(inboundFiles) {
+  const checker = (parent, child) =>
+    parent.includes(child.substring(1, child.length - 1));
+  if (lastBroadcast.length === 0) return;
+
+  return lastBroadcast.length > inboundFiles.length
+    ? checker(JSON.stringify(lastBroadcast), JSON.stringify(inboundFiles))
+    : checker(JSON.stringify(inboundFiles), JSON.stringify(lastBroadcast));
+}
+
+let isExecuting = false;
+let lastBroadcast = [];
+
 const handleSocketEvent = (msg) => {
   if (!msg.includes(messageDelimiter)) return;
   const [event, file] = msg.split(messageDelimiter);
-  pool.push(`${event === 'unlink' ? '-' : '+'} ${file}`);
+  const modified = `${eventSymbol(event)} ${file}`;
+
+  pool.push(modified);
   console.log(`Added to pool: ${file}`);
+
+  if (isExecuting) return;
+  setTimeout(() => {
+    isExecuting = true;
+
+    if (pool.length === 0 || checkIfFilesArePooled(pool)) return;
+
+    alertTeam('```md\n' + pool.join('\n') + '```');
+
+    broadcast('backup');
+    pool = [];
+    lastBroadcast = pool;
+
+    console.log('Pool has been cleared.\n');
+
+    isExecuting = false;
+  }, 5000); // 30000
 };
 
 server.on('connection', (ws, req) => {
@@ -113,13 +158,3 @@ client.on('ready', () => {
 });
 
 client.login(token);
-
-setInterval(() => {
-  if (pool.length > 0) {
-    alertTeam('```md\n' + pool.join('\n') + '```');
-    pool = [];
-    broadcast('backup');
-
-    console.log('Pool has been cleared.\n');
-  }
-}, 30000);
