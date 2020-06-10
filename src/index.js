@@ -19,11 +19,12 @@ const client = new Client();
 
 console.log(`WebSocket server running!\nws://localhost:${port}`);
 
-server.on('connection', () =>
+const setActivity = () =>
   client.user.setActivity(`for changes | ${server.clients.size}`, {
     type: 'WATCHING',
-  })
-);
+  });
+
+server.on('connection', setActivity);
 
 const broadcast = (msg) => server.clients.forEach((client) => client.send(msg));
 
@@ -75,7 +76,10 @@ const handleMessage = (msg) => {
 
 client.on('message', handleMessage);
 
-client.on('ready', () => console.log(client.user.tag));
+client.on('ready', () => {
+  setActivity();
+  console.log(client.user.tag);
+});
 
 client.login(token);
 
