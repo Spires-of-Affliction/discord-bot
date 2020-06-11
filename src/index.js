@@ -40,6 +40,7 @@ const setActivity = () =>
 const broadcast = (msg) => server.clients.forEach((client) => client.send(msg));
 
 let pool = []; // `pool` holds the latest messages temporarily
+let lastPool = []; // Holds the last copy of the pool for broadcasting
 
 const findChannel = () => {
   const guild = client.guilds.cache.find(({ id }) => id === guildID);
@@ -80,6 +81,9 @@ server.on('connection', (ws, req) => {
     setActivity();
     console.log(`New connection: ${req.socket.remoteAddress}`);
   }
+
+  // Send last pool to client
+  if (lastPool.length > 0) ws.send(JSON.stringify(lastPool));
 
   ws.on('close', setActivity);
   ws.on('message', handleSocketEvent);
@@ -148,9 +152,10 @@ setInterval(async () => {
   alertTeam('```md\n' + pool.join('\n') + '```');
 
   broadcast('backup');
-  broadcast(JSON.stringify(pool)); // Send out pool for validation
+  lastPool = [...pool];
+  broadcast(JSON.stringify(lastPool)); // Send out pool for validation
 
   pool = [];
 
   console.log('Pool has been cleared.\n');
-}, 10000); // 30000
+}, 10000);
