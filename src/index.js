@@ -64,8 +64,6 @@ const eventSymbol = (event) => {
   }
 };
 
-let isExecuting = false;
-
 const handleSocketEvent = (msg) => {
   if (!msg.includes(messageDelimiter)) return;
   const [event, file] = msg.split(messageDelimiter);
@@ -73,24 +71,6 @@ const handleSocketEvent = (msg) => {
 
   pool.push(modified);
   console.log(`Added to pool: ${file}`);
-
-  if (isExecuting) return;
-  setTimeout(() => {
-    isExecuting = true;
-
-    if (pool.length === 0) return;
-
-    alertTeam('```md\n' + pool.join('\n') + '```');
-
-    broadcast('backup');
-    broadcast(JSON.stringify(pool)); // Send out pool for validation
-
-    pool = [];
-
-    console.log('Pool has been cleared.\n');
-
-    isExecuting = false;
-  }, 5000); // 30000
 };
 
 server.on('connection', (ws, req) => {
@@ -148,3 +128,16 @@ client.on('ready', () => {
 });
 
 client.login(token);
+
+setInterval(() => {
+  if (pool.length === 0) return;
+
+  alertTeam('```md\n' + pool.join('\n') + '```');
+
+  broadcast('backup');
+  broadcast(JSON.stringify(pool)); // Send out pool for validation
+
+  pool = [];
+
+  console.log('Pool has been cleared.\n');
+}, 10000); // 30000
