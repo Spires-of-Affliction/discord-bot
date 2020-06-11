@@ -5,7 +5,7 @@ require('dotenv').config();
 
 const {
   DEVELOPER_ROLE_ID: developerRoleID,
-  TEAM_ROLE_ID: teamRoleID,
+  // TEAM_ROLE_ID: teamRoleID,
   GITHUB_WEBHOOK_NAME: githubWebhookName,
   GITHUB_WEBHOOK_CHANNEL: githubWebhookChannel,
   TOKEN: token,
@@ -13,14 +13,14 @@ const {
   GUILD_ID: guildID,
   CHANNEL_ID: channelID,
   LOCALIZED,
-  LOCALIZED_CLOUD_STORAGE_ALERT: localizedCloudStorageAlert,
+  // LOCALIZED_CLOUD_STORAGE_ALERT: localizedCloudStorageAlert,
   LOCALIZED_MERGE_ALERT: localizedMergeAlert,
   LOCALIZED_MASTER_COMMIT_ALERT: localizedMasterCommitAlert,
 } = process.env;
 
 const localized = LOCALIZED == 'true';
 
-const server = new WebSocket.Server({ port });
+const server = new WebSocket.Server({ noServer: true, port });
 const client = new Client();
 
 const messageDelimiter = '::';
@@ -74,27 +74,34 @@ const handleSocketEvent = (msg) => {
 };
 
 server.on('connection', (ws, req) => {
-  setActivity();
-  console.log(`New connection: ${req.socket.remoteAddress}`);
+  const isLocalhost = req.socket.remoteAddress.includes('127.0.0.1');
+
+  if (!isLocalhost) {
+    setActivity();
+    console.log(`New connection: ${req.socket.remoteAddress}`);
+  }
+
   ws.on('close', setActivity);
   ws.on('message', handleSocketEvent);
 });
 
 const alertTeam = (msg) => {
   const channel = findChannel();
-  let onlineMembers;
+  // let onlineMembers;
 
-  for (const { presence } of channel.members.values()) {
-    if (presence.status === 'online') onlineMembers++;
-  }
+  // for (const { presence } of channel.members.values()) {
+  //   if (presence.status === 'online') onlineMembers++;
+  // }
 
-  channel.send(
-    `${onlineMembers > channel.members.size / 2 ? `<@&${teamRoleID}>` : ''}\n${
-      localized
-        ? localizedCloudStorageAlert
-        : 'Changes detected in your cloud storage folder:'
-    }\n${msg}`
-  );
+  // channel.send(
+  //   `${onlineMembers > channel.members.size / 2 ? `<@&${teamRoleID}>` : ''}\n${
+  //     localized
+  //       ? localizedCloudStorageAlert
+  //       : 'Changes detected in your cloud storage folder:'
+  //   }\n${msg}`
+  // );
+
+  channel.send(msg);
 };
 
 const alertDevelopers = ({ embeds, channel }) => {
@@ -129,7 +136,13 @@ client.on('ready', () => {
 
 client.login(token);
 
-setInterval(() => {
+setInterval(async () => {
+  const self = await new WebSocket(`ws://localhost:${port}`);
+  self.on('open', () => {
+    self.send('heartbeat');
+    self.terminate();
+  });
+
   if (pool.length === 0) return;
 
   alertTeam('```md\n' + pool.join('\n') + '```');
