@@ -64,18 +64,7 @@ const eventSymbol = (event) => {
   }
 };
 
-function checkIfFilesArePooled(inboundFiles) {
-  const checker = (parent, child) =>
-    parent.includes(child.substring(1, child.length - 1));
-  if (lastBroadcast.length === 0) return;
-
-  return lastBroadcast.length > inboundFiles.length
-    ? checker(JSON.stringify(lastBroadcast), JSON.stringify(inboundFiles))
-    : checker(JSON.stringify(inboundFiles), JSON.stringify(lastBroadcast));
-}
-
 let isExecuting = false;
-let lastBroadcast = [];
 
 const handleSocketEvent = (msg) => {
   if (!msg.includes(messageDelimiter)) return;
@@ -89,13 +78,14 @@ const handleSocketEvent = (msg) => {
   setTimeout(() => {
     isExecuting = true;
 
-    if (pool.length === 0 || checkIfFilesArePooled(pool)) return;
+    if (pool.length === 0) return;
 
     alertTeam('```md\n' + pool.join('\n') + '```');
 
     broadcast('backup');
+    broadcast(JSON.stringify(pool)); // Send out pool for validation
+
     pool = [];
-    lastBroadcast = pool;
 
     console.log('Pool has been cleared.\n');
 
